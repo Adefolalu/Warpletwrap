@@ -7,8 +7,10 @@ import {
   useSendCalls,
 } from "wagmi";
 import { parseEther, encodeFunctionData } from "viem";
+import { sdk } from "@farcaster/miniapp-sdk";
 import { MintContract } from "../lib/Contracts";
 import { uploadToIPFS } from "../lib/pinata";
+import { getIPFSUrl } from "../lib/pinata";
 import type { WarpletMetrics } from "../hooks/useWarpletData";
 
 interface MintModalProps {
@@ -22,6 +24,8 @@ interface MintModalProps {
 type PaymentMethod = "eth" | "erc20" | null;
 
 const DONUT_TOKEN_ADDRESS = "0xae4a37d554c6d6f3e398546d8566b25052e0169c";
+const MINI_APP_URL =
+  typeof window !== "undefined" ? window.location.origin : "";
 
 export default function MintModal({
   isOpen,
@@ -37,6 +41,8 @@ export default function MintModal({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [pendingHash, setPendingHash] = useState<`0x${string}` | undefined>();
+  const [ipfsHash, setIpfsHash] = useState<string | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const { writeContractAsync: mintWithETH } = useWriteContract();
   const { sendCalls } = useSendCalls();
@@ -50,7 +56,28 @@ export default function MintModal({
     setError(null);
     setSuccess(false);
     setPendingHash(undefined);
+    setIpfsHash(null);
+    setShowShareModal(false);
     onClose();
+  };
+
+  const handleShareOnFarcaster = async () => {
+    if (!ipfsHash) return;
+
+    try {
+      const imageUrl = getIPFSUrl(ipfsHash);
+      const text = `Check out my Warplet data for 2025! 🍩\n\nLet's see yours too 👇`;
+
+      await sdk.actions.composeCast({
+        text,
+        embeds: [imageUrl, MINI_APP_URL] as [string, string],
+      });
+
+      resetModal();
+    } catch (error) {
+      console.error("Failed to share on Farcaster:", error);
+      setError("Failed to share on Farcaster");
+    }
   };
 
   if (!isOpen) return null;
@@ -68,7 +95,8 @@ export default function MintModal({
         netWorth: metrics.currentNetWorth,
         timestamp: Date.now(),
       })
-        .then(() => {
+        .then((hash) => {
+          setIpfsHash(hash);
           mintWithETH({
             address: MintContract.address as `0x${string}`,
             abi: MintContract.abi,
@@ -85,8 +113,8 @@ export default function MintModal({
               setPendingHash(hash);
               setSuccess(true);
               setTimeout(() => {
-                resetModal();
-              }, 2000);
+                setShowShareModal(true);
+              }, 1000);
             })
             .catch((err: any) => {
               setError(err.message || "Transaction failed");
@@ -116,7 +144,8 @@ export default function MintModal({
         netWorth: metrics.currentNetWorth,
         timestamp: Date.now(),
       })
-        .then(async () => {
+        .then(async (hash) => {
+          setIpfsHash(hash);
           try {
             // Create approval and mint calls for $Donut token
             const calls = [
@@ -168,8 +197,8 @@ export default function MintModal({
             setPendingHash(result as unknown as `0x${string}`);
             setSuccess(true);
             setTimeout(() => {
-              resetModal();
-            }, 2000);
+              setShowShareModal(true);
+            }, 1000);
           } catch (err: any) {
             setError(err.message || "Transaction failed");
             setIsLoading(false);
@@ -419,6 +448,156 @@ export default function MintModal({
           </button>
         </div>
       </div>
+
+      {/* Share Modal */}
+      {showShareModal && ipfsHash && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1001,
+            backdropFilter: "blur(4px)",
+          }}
+          onClick={() => resetModal()}
+        >
+          <div
+            style={{
+              background: theme.cardBg,
+              borderRadius: "1.5rem",
+              padding: "2rem",
+              maxWidth: "500px",
+              width: "90%",
+              color: theme.textColor,
+              border: theme.cardBorder,
+              boxShadow: theme.cardShadow,
+              position: "relative",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => resetModal()}
+              style={{
+                position: "absolute",
+                top: "1rem",
+                right: "1rem",
+                background: "none",
+                border: "none",
+                fontSize: "1.5rem",
+                cursor: "pointer",
+                color: theme.textColor,
+              }}
+            >
+              ✕
+            </button>
+
+            <h2
+              style={{
+                marginBottom: "1.5rem",
+                color: theme.accentColor,
+                fontSize: "1.5rem",
+              }}
+            >
+              Share Your Wrapped
+            </h2>
+
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+            >
+              <div
+                style={{
+                  background: theme.secondaryBg,
+                  padding: "1rem",
+                  borderRadius: "1rem",
+                  textAlign: "center",
+                }}
+              >
+                <p
+                  style={{
+                    margin: "0 0 0.5rem 0",
+                    fontSize: "0.9rem",
+                    opacity: 0.8,
+                  }}
+                >
+                  Share this on Farcaster:
+                </p>
+                <div
+                  style={{
+                    background: "rgba(0,0,0,0.2)",
+                    padding: "1rem",
+                    borderRadius: "0.75rem",
+                    fontSize: "0.85rem",
+                    lineHeight: "1.5",
+                    margin: "0.5rem 0",
+                  }}
+                >
+                  Check out my Warplet data for 2025! 🍩
+                  <br />
+                  Let&apos;s see yours too 👇
+                </div>
+              </div>
+
+              <button
+                onClick={handleShareOnFarcaster}
+                style={{
+                  padding: "1rem",
+                  borderRadius: "1rem",
+                  background: theme.accentColor,
+                  color: theme.cardBg,
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "1rem",
+                  fontWeight: "bold",
+                }}
+              >
+                📲 Share on Farcaster
+              </button>
+
+              <button
+                onClick={() => {
+                  const shareText = `Check out my Warplet data for 2025! 🍩\n${getIPFSUrl(ipfsHash)}\n${MINI_APP_URL}`;
+                  navigator.clipboard.writeText(shareText);
+                  alert("Share text copied to clipboard!");
+                }}
+                style={{
+                  padding: "0.75rem",
+                  borderRadius: "1rem",
+                  background: "transparent",
+                  color: theme.accentColor,
+                  border: `1px solid ${theme.accentColor}`,
+                  cursor: "pointer",
+                  fontSize: "0.9rem",
+                  fontWeight: "bold",
+                }}
+              >
+                📋 Copy Share Text
+              </button>
+
+              <button
+                onClick={() => resetModal()}
+                style={{
+                  padding: "0.75rem",
+                  borderRadius: "1rem",
+                  background: "transparent",
+                  color: theme.accentColor,
+                  border: `1px solid ${theme.accentColor}`,
+                  cursor: "pointer",
+                  fontSize: "0.9rem",
+                  fontWeight: "bold",
+                }}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
