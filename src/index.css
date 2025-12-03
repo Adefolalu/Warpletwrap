@@ -1,3 +1,9 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 :root {
   background-color: #181818;
   color: rgba(255, 255, 255, 0.87);
@@ -17,5 +23,49 @@
   :root {
     background-color: #f8f8f8;
     color: #181818;
+  }
+}
+
+.warplet-container {
+  padding: 0.5rem;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  overflow-x: hidden;
+}
+
+.warplet-card {
+  padding: 1.25rem;
+  max-width: 400px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.warplet-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.warplet-stat-value {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+@media (max-width: 480px) {
+  .warplet-card {
+    padding: 1rem !important;
+  }
+
+  .warplet-grid {
+    gap: 0.5rem;
+  }
+
+  .warplet-stat-value {
+    font-size: 1.1rem !important;
+  }
+
+  h1 {
+    font-size: 1.25rem !important;
   }
 }

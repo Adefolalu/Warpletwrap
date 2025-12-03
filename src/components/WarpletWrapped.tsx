@@ -38,8 +38,8 @@ const themes = {
     negativeColor: "#ef4444",
     secondaryBg: "rgba(255, 255, 255, 0.5)",
     icon: "✨",
-    decorationTop: "🌸",
-    decorationBottom: "🎀",
+    decorationTop: "🍩",
+    decorationBottom: "🍩",
     fontFamily: "sans-serif",
   },
   farcaster: {
@@ -83,15 +83,15 @@ export default function WarpletWrapped({
 
   return (
     <div
+      className="warplet-container"
       style={{
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: "1rem",
         fontFamily: theme.fontFamily,
-        background: theme.bg,
+        backgroundColor: theme.bg,
         backgroundImage: theme.bgImage,
         backgroundSize: "100px 100px",
         transition: "all 0.3s ease",
@@ -130,10 +130,8 @@ export default function WarpletWrapped({
       </div>
 
       <div
+        className="warplet-card"
         style={{
-          maxWidth: "500px",
-          width: "100%",
-          padding: "2rem",
           background: theme.cardBg,
           borderRadius: "1.5rem",
           color: theme.textColor,
@@ -150,7 +148,7 @@ export default function WarpletWrapped({
             position: "absolute",
             top: "-10px",
             right: "-10px",
-            fontSize: "4rem",
+            fontSize: "3rem",
             opacity: 0.2,
             pointerEvents: "none",
           }}
@@ -162,7 +160,7 @@ export default function WarpletWrapped({
             position: "absolute",
             bottom: "-10px",
             left: "-10px",
-            fontSize: "4rem",
+            fontSize: "3rem",
             opacity: 0.2,
             pointerEvents: "none",
           }}
@@ -171,14 +169,14 @@ export default function WarpletWrapped({
         </div>
 
         {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-          <div style={{ fontSize: "3rem", marginBottom: "0.5rem" }}>
+        <div style={{ textAlign: "center", marginBottom: "1rem" }}>
+          <div style={{ fontSize: "2.5rem", marginBottom: "0.25rem" }}>
             {theme.icon}
           </div>
           <h1
             style={{
-              fontSize: "2rem",
-              marginBottom: "0.5rem",
+              fontSize: "1.5rem",
+              marginBottom: "0.25rem",
               textShadow:
                 currentTheme === "christmas"
                   ? "2px 2px 4px rgba(0,0,0,0.3)"
@@ -195,11 +193,11 @@ export default function WarpletWrapped({
             <div
               style={{
                 opacity: 0.9,
-                fontSize: "0.9rem",
+                fontSize: "0.7rem",
                 fontStyle: "italic",
                 background: theme.secondaryBg,
                 display: "inline-block",
-                padding: "4px 12px",
+                padding: "2px 10px",
                 borderRadius: "20px",
               }}
             >
@@ -214,17 +212,15 @@ export default function WarpletWrapped({
 
         {/* Total Stats Grid */}
         <div
+          className="warplet-grid"
           style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "1rem",
-            marginBottom: "1.5rem",
+            marginBottom: "1rem",
           }}
         >
           <div
             style={{
               background: theme.secondaryBg,
-              padding: "1rem",
+              padding: "0.75rem",
               borderRadius: "1rem",
               textAlign: "center",
               border:
@@ -234,14 +230,13 @@ export default function WarpletWrapped({
             }}
           >
             <div
-              style={{ fontSize: "0.8rem", opacity: 0.8, marginBottom: "4px" }}
+              style={{ fontSize: "0.7rem", opacity: 0.8, marginBottom: "4px" }}
             >
               Total P/L
             </div>
             <div
+              className="warplet-stat-value"
               style={{
-                fontSize: "1.5rem",
-                fontWeight: "bold",
                 color:
                   metrics.totalProfitLoss >= 0
                     ? theme.positiveColor
@@ -259,7 +254,7 @@ export default function WarpletWrapped({
           <div
             style={{
               background: theme.secondaryBg,
-              padding: "1rem",
+              padding: "0.75rem",
               borderRadius: "1rem",
               textAlign: "center",
               border:
@@ -269,14 +264,13 @@ export default function WarpletWrapped({
             }}
           >
             <div
-              style={{ fontSize: "0.8rem", opacity: 0.8, marginBottom: "4px" }}
+              style={{ fontSize: "0.7rem", opacity: 0.8, marginBottom: "4px" }}
             >
               Net Worth
             </div>
             <div
+              className="warplet-stat-value"
               style={{
-                fontSize: "1.5rem",
-                fontWeight: "bold",
                 color: theme.accentColor,
                 textShadow:
                   currentTheme === "christmas"
@@ -295,7 +289,7 @@ export default function WarpletWrapped({
           <div
             style={{
               background: theme.secondaryBg,
-              padding: "1rem",
+              padding: "0.75rem",
               borderRadius: "1rem",
               textAlign: "center",
               border:
@@ -305,11 +299,11 @@ export default function WarpletWrapped({
             }}
           >
             <div
-              style={{ fontSize: "0.8rem", opacity: 0.8, marginBottom: "4px" }}
+              style={{ fontSize: "0.7rem", opacity: 0.8, marginBottom: "4px" }}
             >
               Win Rate
             </div>
-            <div style={{ fontSize: "1.5rem", fontWeight: "bold" }}>
+            <div className="warplet-stat-value">
               {formatPercent(metrics.winRate)}
             </div>
           </div>
@@ -317,7 +311,7 @@ export default function WarpletWrapped({
           <div
             style={{
               background: theme.secondaryBg,
-              padding: "1rem",
+              padding: "0.75rem",
               borderRadius: "1rem",
               textAlign: "center",
               border:
@@ -327,11 +321,11 @@ export default function WarpletWrapped({
             }}
           >
             <div
-              style={{ fontSize: "0.8rem", opacity: 0.8, marginBottom: "4px" }}
+              style={{ fontSize: "0.7rem", opacity: 0.8, marginBottom: "4px" }}
             >
               Total Trades
             </div>
-            <div style={{ fontSize: "1.5rem", fontWeight: "bold" }}>
+            <div className="warplet-stat-value">
               {metrics.totalTrades.toLocaleString()}
             </div>
           </div>
@@ -339,7 +333,7 @@ export default function WarpletWrapped({
           <div
             style={{
               background: theme.secondaryBg,
-              padding: "1rem",
+              padding: "0.75rem",
               borderRadius: "1rem",
               textAlign: "center",
               border:
@@ -349,11 +343,11 @@ export default function WarpletWrapped({
             }}
           >
             <div
-              style={{ fontSize: "0.8rem", opacity: 0.8, marginBottom: "4px" }}
+              style={{ fontSize: "0.7rem", opacity: 0.8, marginBottom: "4px" }}
             >
               Transfers
             </div>
-            <div style={{ fontSize: "1.5rem", fontWeight: "bold" }}>
+            <div className="warplet-stat-value">
               {metrics.totalTokenTransfers.toLocaleString()}
             </div>
           </div>
@@ -361,7 +355,7 @@ export default function WarpletWrapped({
           <div
             style={{
               background: theme.secondaryBg,
-              padding: "1rem",
+              padding: "0.75rem",
               borderRadius: "1rem",
               textAlign: "center",
               border:
@@ -371,11 +365,11 @@ export default function WarpletWrapped({
             }}
           >
             <div
-              style={{ fontSize: "0.8rem", opacity: 0.8, marginBottom: "4px" }}
+              style={{ fontSize: "0.7rem", opacity: 0.8, marginBottom: "4px" }}
             >
               NFT Collections
             </div>
-            <div style={{ fontSize: "1.5rem", fontWeight: "bold" }}>
+            <div className="warplet-stat-value">
               {metrics.totalNFTCollections.toLocaleString()}
             </div>
           </div>
@@ -385,8 +379,8 @@ export default function WarpletWrapped({
         {metrics.biggestWin && (
           <div
             style={{
-              marginBottom: "1rem",
-              padding: "1rem",
+              marginBottom: "0.75rem",
+              padding: "0.75rem",
               background:
                 currentTheme === "christmas"
                   ? "rgba(20, 83, 45, 0.4)"
@@ -399,26 +393,47 @@ export default function WarpletWrapped({
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
+              gap: "0.5rem",
             }}
           >
             <div
-              style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                minWidth: 0,
+                flex: 1,
+              }}
             >
-              <div style={{ fontSize: "1.5rem" }}>🎁</div>
-              <div>
-                <div style={{ fontSize: "0.8rem", opacity: 0.8 }}>
+              <div style={{ fontSize: "1.25rem", flexShrink: 0 }}>🎁</div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: "0.7rem", opacity: 0.8 }}>
                   Biggest Win
                 </div>
-                <div style={{ fontWeight: "bold" }}>
+                <div
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: "0.9rem",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
                   {metrics.biggestWin.token.symbol}
                 </div>
               </div>
             </div>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontWeight: "bold", color: theme.positiveColor }}>
+            <div style={{ textAlign: "right", flexShrink: 0 }}>
+              <div
+                style={{
+                  fontWeight: "bold",
+                  color: theme.positiveColor,
+                  fontSize: "0.9rem",
+                }}
+              >
                 {formatUSD(metrics.biggestWin.profitUsd)}
               </div>
-              <div style={{ fontSize: "0.8rem", opacity: 0.8 }}>
+              <div style={{ fontSize: "0.7rem", opacity: 0.8 }}>
                 {formatPercent(
                   metrics.biggestWin.token.realized_profit_percentage
                 )}
@@ -431,8 +446,8 @@ export default function WarpletWrapped({
         {metrics.biggestLoss && metrics.biggestLoss.profitUsd < 0 && (
           <div
             style={{
-              marginBottom: "1.5rem",
-              padding: "1rem",
+              marginBottom: "0.75rem",
+              padding: "0.75rem",
               background:
                 currentTheme === "christmas"
                   ? "rgba(127, 29, 29, 0.4)"
@@ -445,26 +460,47 @@ export default function WarpletWrapped({
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
+              gap: "0.5rem",
             }}
           >
             <div
-              style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                minWidth: 0,
+                flex: 1,
+              }}
             >
-              <div style={{ fontSize: "1.5rem" }}>📉</div>
-              <div>
-                <div style={{ fontSize: "0.8rem", opacity: 0.8 }}>
+              <div style={{ fontSize: "1.25rem", flexShrink: 0 }}>📉</div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: "0.7rem", opacity: 0.8 }}>
                   Biggest Loss
                 </div>
-                <div style={{ fontWeight: "bold" }}>
+                <div
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: "0.9rem",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
                   {metrics.biggestLoss.token.symbol}
                 </div>
               </div>
             </div>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontWeight: "bold", color: theme.negativeColor }}>
+            <div style={{ textAlign: "right", flexShrink: 0 }}>
+              <div
+                style={{
+                  fontWeight: "bold",
+                  color: theme.negativeColor,
+                  fontSize: "0.9rem",
+                }}
+              >
                 {formatUSD(metrics.biggestLoss.profitUsd)}
               </div>
-              <div style={{ fontSize: "0.8rem", opacity: 0.8 }}>
+              <div style={{ fontSize: "0.7rem", opacity: 0.8 }}>
                 {formatPercent(
                   Math.abs(metrics.biggestLoss.token.realized_profit_percentage)
                 )}
@@ -478,31 +514,48 @@ export default function WarpletWrapped({
           style={{
             background: theme.secondaryBg,
             borderRadius: "1rem",
-            padding: "1rem",
+            padding: "0.75rem",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
+            gap: "0.5rem",
             borderTop:
               currentTheme === "christmas"
                 ? "2px dashed rgba(255,255,255,0.2)"
                 : "none",
           }}
         >
-          <div style={{ textAlign: "center", flex: 1 }}>
+          <div style={{ textAlign: "center", flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: "0.7rem", opacity: 0.7 }}>Bought</div>
-            <div style={{ fontWeight: "bold", color: theme.positiveColor }}>
+            <div
+              style={{
+                fontWeight: "bold",
+                color: theme.positiveColor,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
               $
               {metrics.totalBoughtVolume.toLocaleString("en-US", {
                 maximumFractionDigits: 0,
               })}
             </div>
           </div>
-          <div style={{ fontSize: "1.2rem", opacity: 0.5 }}>
+          <div style={{ fontSize: "1.2rem", opacity: 0.5, flexShrink: 0 }}>
             {theme.decorationTop}
           </div>
-          <div style={{ textAlign: "center", flex: 1 }}>
+          <div style={{ textAlign: "center", flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: "0.7rem", opacity: 0.7 }}>Sold</div>
-            <div style={{ fontWeight: "bold", color: theme.negativeColor }}>
+            <div
+              style={{
+                fontWeight: "bold",
+                color: theme.negativeColor,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
               $
               {metrics.totalSoldVolume.toLocaleString("en-US", {
                 maximumFractionDigits: 0,
