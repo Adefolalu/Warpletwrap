@@ -7,6 +7,7 @@ import {
   getProfitabilitySummary,
   getNetWorth,
 } from "../lib/moralis";
+import { getWarpletNFT } from "../lib/alchemy";
 import type {
   MoralisTokenProfitability,
   MoralisProfitabilitySummaryResponse,
@@ -37,6 +38,15 @@ export interface WarpletMetrics {
   totalSoldVolume: number;
   firstTransactionDate: string | null;
   currentNetWorth: number;
+  warpletNft: {
+    image: {
+      originalUrl: string;
+      thumbnailUrl: string;
+      pngUrl: string;
+    };
+    name: string;
+    tokenId: string;
+  } | null;
 }
 
 function calculateMetrics(
@@ -48,7 +58,8 @@ function calculateMetrics(
       first_transaction: { block_timestamp: string };
     }>;
   },
-  netWorthData?: { total_networth_usd: string }
+  netWorthData?: { total_networth_usd: string },
+  warpletNft?: any
 ): WarpletMetrics {
   // Filter out tokens with no sells (no realized profit/loss)
   const tradedTokens = tokens.filter((t) => t.total_sells > 0);
@@ -135,6 +146,7 @@ function calculateMetrics(
     currentNetWorth: netWorthData?.total_networth_usd
       ? Number.parseFloat(netWorthData.total_networth_usd)
       : 0,
+    warpletNft: warpletNft || null,
   };
 }
 
@@ -169,6 +181,8 @@ export function useWarpletData(fid: number | null) {
       return getWalletProfitability(walletAddress);
     },
     enabled: !!walletAddress,
+    staleTime: 1000 * 60 * 60,
+    gcTime: 1000 * 60 * 60 * 24,
   });
 
   // Fetch stats data from Moralis (includes token_transfers and collections)
@@ -181,10 +195,11 @@ export function useWarpletData(fid: number | null) {
     queryFn: async () => {
       if (!walletAddress) throw new Error("No wallet address found");
       const data = await getWalletNetWorth(walletAddress);
-      console.log("Stats data:", data);
       return data;
     },
     enabled: !!walletAddress,
+    staleTime: 1000 * 60 * 60,
+    gcTime: 1000 * 60 * 60 * 24,
   });
 
   // Fetch chains data from Moralis (includes first transaction date)
@@ -197,10 +212,11 @@ export function useWarpletData(fid: number | null) {
     queryFn: async () => {
       if (!walletAddress) throw new Error("No wallet address found");
       const data = await getWalletChains(walletAddress);
-      console.log("Chains data:", data);
       return data;
     },
     enabled: !!walletAddress,
+    staleTime: 1000 * 60 * 60,
+    gcTime: 1000 * 60 * 60 * 24,
   });
 
   // Fetch profitability summary from Moralis
@@ -215,6 +231,8 @@ export function useWarpletData(fid: number | null) {
       return getProfitabilitySummary(walletAddress);
     },
     enabled: !!walletAddress,
+    staleTime: 1000 * 60 * 60,
+    gcTime: 1000 * 60 * 60 * 24,
   });
 
   // Fetch net worth from Moralis
@@ -227,10 +245,23 @@ export function useWarpletData(fid: number | null) {
     queryFn: async () => {
       if (!walletAddress) throw new Error("No wallet address found");
       const data = await getNetWorth(walletAddress);
-      console.log("Net worth data:", data);
       return data;
     },
     enabled: !!walletAddress,
+    staleTime: 1000 * 60 * 60,
+    gcTime: 1000 * 60 * 60 * 24,
+  });
+
+  // Fetch Warplet NFT
+  const { data: warpletNft, isLoading: isLoadingNft } = useQuery({
+    queryKey: ["alchemy-warplet-nft", walletAddress],
+    queryFn: async () => {
+      if (!walletAddress) return null;
+      return getWarpletNFT(walletAddress);
+    },
+    enabled: !!walletAddress,
+    staleTime: 1000 * 60 * 60,
+    gcTime: 1000 * 60 * 60 * 24,
   });
 
   const metrics = profitabilityData
@@ -239,7 +270,8 @@ export function useWarpletData(fid: number | null) {
         statsData,
         summaryData,
         chainsData,
-        netWorthData
+        netWorthData,
+        warpletNft
       )
     : null;
 
@@ -253,7 +285,8 @@ export function useWarpletData(fid: number | null) {
       isLoadingStats ||
       isLoadingChains ||
       isLoadingSummary ||
-      isLoadingNetWorth,
+      isLoadingNetWorth ||
+      isLoadingNft,
     error:
       userError ||
       profitabilityError ||

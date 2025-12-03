@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { WarpletMetrics } from "../hooks/useWarpletData";
+import MintModal from "./MintModal";
 
 interface WarpletWrappedProps {
   displayName: string;
@@ -67,6 +68,7 @@ export default function WarpletWrapped({
 }: WarpletWrappedProps) {
   const [currentTheme, setCurrentTheme] =
     useState<keyof typeof themes>("christmas");
+  const [isMintModalOpen, setIsMintModalOpen] = useState(false);
   const theme = themes[currentTheme];
 
   const formatUSD = (amount: number) => {
@@ -171,7 +173,29 @@ export default function WarpletWrapped({
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: "0.5rem" }}>
           <div style={{ fontSize: "2.5rem", marginBottom: "0.25rem" }}>
-            {theme.icon}
+            {metrics.warpletNft?.image?.thumbnailUrl ||
+            metrics.warpletNft?.image?.pngUrl ||
+            metrics.warpletNft?.image?.originalUrl ? (
+              <img
+                src={
+                  metrics.warpletNft.image.thumbnailUrl ||
+                  metrics.warpletNft.image.pngUrl ||
+                  metrics.warpletNft.image.originalUrl
+                }
+                alt={metrics.warpletNft.name || "Warplet NFT"}
+                style={{
+                  width: "80px",
+                  height: "80px",
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  border: `3px solid ${theme.accentColor}`,
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                  display: "inline-block",
+                }}
+              />
+            ) : (
+              theme.icon
+            )}
           </div>
           <h1
             style={{
@@ -564,6 +588,73 @@ export default function WarpletWrapped({
           </div>
         </div>
       </div>
+
+      {/* Mint Buttons - Side by Side */}
+      <div
+        style={{
+          marginTop: "2rem",
+          display: "flex",
+          gap: "1rem",
+          justifyContent: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        <button
+          onClick={() => setIsMintModalOpen(true)}
+          style={{
+            padding: "1rem 2rem",
+            background: theme.accentColor,
+            color: theme.cardBg,
+            border: "none",
+            borderRadius: "1.5rem",
+            fontSize: "1rem",
+            fontWeight: "bold",
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+          }}
+          onMouseEnter={(e) => {
+            (e.target as HTMLElement).style.transform = "scale(1.05)";
+          }}
+          onMouseLeave={(e) => {
+            (e.target as HTMLElement).style.transform = "scale(1)";
+          }}
+        >
+          💰 Mint with ETH
+        </button>
+        <button
+          onClick={() => setIsMintModalOpen(true)}
+          style={{
+            padding: "1rem 2rem",
+            background: theme.accentColor,
+            color: theme.cardBg,
+            border: "none",
+            borderRadius: "1.5rem",
+            fontSize: "1rem",
+            fontWeight: "bold",
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+          }}
+          onMouseEnter={(e) => {
+            (e.target as HTMLElement).style.transform = "scale(1.05)";
+          }}
+          onMouseLeave={(e) => {
+            (e.target as HTMLElement).style.transform = "scale(1)";
+          }}
+        >
+          🍩 Mint with $Donut
+        </button>
+      </div>
+
+      {/* Mint Modal */}
+      <MintModal
+        isOpen={isMintModalOpen}
+        onClose={() => setIsMintModalOpen(false)}
+        displayName={displayName}
+        metrics={metrics}
+        theme={theme}
+      />
     </div>
   );
 }
