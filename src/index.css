@@ -27,7 +27,7 @@
 }
 
 .warplet-container {
-  padding: 0.5rem;
+  padding: 1.5rem;
   width: 100%;
   display: flex;
   justify-content: center;
@@ -44,7 +44,7 @@
 .warplet-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .warplet-stat-value {
@@ -53,19 +53,24 @@
 }
 
 @media (max-width: 480px) {
+  .warplet-container {
+    padding: 3rem 1.5rem;
+    align-items: flex-start;
+  }
+
   .warplet-card {
-    padding: 1rem !important;
+    padding: 0.75rem !important;
   }
 
   .warplet-grid {
-    gap: 0.5rem;
+    gap: 0.25rem;
   }
 
   .warplet-stat-value {
-    font-size: 1.1rem !important;
+    font-size: 0.9rem !important;
   }
 
   h1 {
-    font-size: 1.25rem !important;
+    font-size: 1.1rem !important;
   }
 }

@@ -169,7 +169,7 @@ export default function WarpletWrapped({
         </div>
 
         {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: "1rem" }}>
+        <div style={{ textAlign: "center", marginBottom: "0.5rem" }}>
           <div style={{ fontSize: "2.5rem", marginBottom: "0.25rem" }}>
             {theme.icon}
           </div>
@@ -214,13 +214,13 @@ export default function WarpletWrapped({
         <div
           className="warplet-grid"
           style={{
-            marginBottom: "1rem",
+            marginBottom: "0.5rem",
           }}
         >
           <div
             style={{
               background: theme.secondaryBg,
-              padding: "0.75rem",
+              padding: "0.5rem",
               borderRadius: "1rem",
               textAlign: "center",
               border:
@@ -254,7 +254,7 @@ export default function WarpletWrapped({
           <div
             style={{
               background: theme.secondaryBg,
-              padding: "0.75rem",
+              padding: "0.5rem",
               borderRadius: "1rem",
               textAlign: "center",
               border:
@@ -289,7 +289,7 @@ export default function WarpletWrapped({
           <div
             style={{
               background: theme.secondaryBg,
-              padding: "0.75rem",
+              padding: "0.5rem",
               borderRadius: "1rem",
               textAlign: "center",
               border:
@@ -311,7 +311,7 @@ export default function WarpletWrapped({
           <div
             style={{
               background: theme.secondaryBg,
-              padding: "0.75rem",
+              padding: "0.5rem",
               borderRadius: "1rem",
               textAlign: "center",
               border:
@@ -333,7 +333,7 @@ export default function WarpletWrapped({
           <div
             style={{
               background: theme.secondaryBg,
-              padding: "0.75rem",
+              padding: "0.5rem",
               borderRadius: "1rem",
               textAlign: "center",
               border:
@@ -355,7 +355,7 @@ export default function WarpletWrapped({
           <div
             style={{
               background: theme.secondaryBg,
-              padding: "0.75rem",
+              padding: "0.5rem",
               borderRadius: "1rem",
               textAlign: "center",
               border:
@@ -379,8 +379,8 @@ export default function WarpletWrapped({
         {metrics.biggestWin && (
           <div
             style={{
-              marginBottom: "0.75rem",
-              padding: "0.75rem",
+              marginBottom: "0.5rem",
+              padding: "0.5rem",
               background:
                 currentTheme === "christmas"
                   ? "rgba(20, 83, 45, 0.4)"
@@ -446,8 +446,8 @@ export default function WarpletWrapped({
         {metrics.biggestLoss && metrics.biggestLoss.profitUsd < 0 && (
           <div
             style={{
-              marginBottom: "0.75rem",
-              padding: "0.75rem",
+              marginBottom: "0.5rem",
+              padding: "0.5rem",
               background:
                 currentTheme === "christmas"
                   ? "rgba(127, 29, 29, 0.4)"
@@ -514,7 +514,7 @@ export default function WarpletWrapped({
           style={{
             background: theme.secondaryBg,
             borderRadius: "1rem",
-            padding: "0.75rem",
+            padding: "0.5rem",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
