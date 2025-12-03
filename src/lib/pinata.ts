@@ -126,6 +126,41 @@ export async function uploadImageToIPFS(imageUrl: string): Promise<string> {
   }
 }
 
+export async function uploadBlobToIPFS(
+  blob: Blob,
+  filename = "file.bin"
+): Promise<string> {
+  try {
+    if (!PINATA_JWT) {
+      throw new Error("Pinata JWT not configured. Set VITE_PINATA_JWT in .env");
+    }
+
+    const formData = new FormData();
+    formData.append("file", blob, filename);
+
+    const uploadResponse = await fetch(
+      "https://api.pinata.cloud/pinning/pinFileToIPFS",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${PINATA_JWT}`,
+        },
+        body: formData,
+      }
+    );
+
+    if (!uploadResponse.ok) {
+      throw new Error(`Blob upload failed: ${uploadResponse.statusText}`);
+    }
+
+    const result = (await uploadResponse.json()) as PinataUploadResponse;
+    return result.IpfsHash;
+  } catch (error) {
+    console.error("Blob upload error:", error);
+    throw error;
+  }
+}
+
 export function getIPFSUrl(hash: string): string {
   return `https://bronze-objective-narwhal-944.mypinata.cloud/ipfs/${hash}`;
 }

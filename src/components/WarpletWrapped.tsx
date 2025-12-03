@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { WarpletMetrics } from "../hooks/useWarpletData";
 import { useAccount, useWriteContract, useSendCalls } from "wagmi";
 import { parseEther, encodeFunctionData } from "viem";
 import { sdk } from "@farcaster/miniapp-sdk";
-import { uploadToIPFS, getIPFSUrl } from "../lib/pinata";
+import { uploadToIPFS, getIPFSUrl, uploadBlobToIPFS } from "../lib/pinata";
+import { toBlob } from "html-to-image";
 import { MintContract } from "../lib/Contracts";
 
 interface WarpletWrappedProps {
@@ -82,18 +83,19 @@ export default function WarpletWrapped({
   const { writeContractAsync: mintWithETHWrite } = useWriteContract();
   const { sendCalls } = useSendCalls();
   const theme = themes[currentTheme];
+  const cardRef = useRef<HTMLDivElement | null>(null);
 
   const DONUT_TOKEN_ADDRESS =
     "0xae4a37d554c6d6f3e398546d8566b25052e0169c" as const;
 
+  const [imageUrlForShare, setImageUrlForShare] = useState<string | null>(null);
   const handleShareOnFarcaster = async () => {
-    if (!ipfsHash) return;
+    if (!imageUrlForShare) return;
     try {
-      const imageUrl = getIPFSUrl(ipfsHash);
       const text = `Check out my Warplet data for 2025! 🍩\n\nLet's see yours too 👇`;
       await sdk.actions.composeCast({
         text,
-        embeds: [imageUrl, window.location.origin] as [string, string],
+        embeds: [imageUrlForShare, window.location.origin] as [string, string],
       });
       setShowShareModal(false);
     } catch (e) {
@@ -106,11 +108,22 @@ export default function WarpletWrapped({
     try {
       setIsLoadingMint(true);
       setMintError(null);
+      // Render card to image and upload to IPFS first
+      const node = cardRef.current;
+      if (!node) throw new Error("Card element not found");
+      const blob = await toBlob(node, { cacheBust: true });
+      if (!blob) throw new Error("Failed to render card image");
+      const imageHash = await uploadBlobToIPFS(blob, "warplet-card.png");
+      const imageUrl = getIPFSUrl(imageHash);
+      setImageUrlForShare(imageUrl);
+
+      // Upload metadata including image URL
       const hash = await uploadToIPFS({
         username: displayName,
         totalProfitLoss: metrics.totalProfitLoss,
         winRate: metrics.winRate,
         netWorth: metrics.currentNetWorth,
+        imageUrl,
         timestamp: Date.now(),
       });
       setIpfsHash(hash);
@@ -141,11 +154,22 @@ export default function WarpletWrapped({
     try {
       setIsLoadingMint(true);
       setMintError(null);
+      // Render card to image and upload to IPFS first
+      const node = cardRef.current;
+      if (!node) throw new Error("Card element not found");
+      const blob = await toBlob(node, { cacheBust: true });
+      if (!blob) throw new Error("Failed to render card image");
+      const imageHash = await uploadBlobToIPFS(blob, "warplet-card.png");
+      const imageUrl = getIPFSUrl(imageHash);
+      setImageUrlForShare(imageUrl);
+
+      // Upload metadata including image URL
       const hash = await uploadToIPFS({
         username: displayName,
         totalProfitLoss: metrics.totalProfitLoss,
         winRate: metrics.winRate,
         netWorth: metrics.currentNetWorth,
+        imageUrl,
         timestamp: Date.now(),
       });
       setIpfsHash(hash);
@@ -270,6 +294,7 @@ export default function WarpletWrapped({
           border: theme.cardBorder,
           transition: "all 0.3s ease",
         }}
+        ref={cardRef}
       >
         {/* Decorations */}
         <div
@@ -893,7 +918,7 @@ export default function WarpletWrapped({
 
               <button
                 onClick={() => {
-                  const shareText = `Check out my Warplet data for 2025! 🍩\n${getIPFSUrl(ipfsHash!)}\n${window.location.origin}`;
+                  const shareText = `Check out my Warplet data for 2025! 🍩\n${imageUrlForShare ?? ""}\n${window.location.origin}`;
                   navigator.clipboard.writeText(shareText);
                   alert("Share text copied to clipboard!");
                 }}
