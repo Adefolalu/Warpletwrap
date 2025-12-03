@@ -1,6 +1,10 @@
 import { useState } from "react";
 import type { WarpletMetrics } from "../hooks/useWarpletData";
-import MintModal from "./MintModal";
+import { useAccount, useWriteContract, useSendCalls } from "wagmi";
+import { parseEther, encodeFunctionData } from "viem";
+import { sdk } from "@farcaster/miniapp-sdk";
+import { uploadToIPFS, getIPFSUrl } from "../lib/pinata";
+import { MintContract } from "../lib/Contracts";
 
 interface WarpletWrappedProps {
   displayName: string;
@@ -68,8 +72,131 @@ export default function WarpletWrapped({
 }: WarpletWrappedProps) {
   const [currentTheme, setCurrentTheme] =
     useState<keyof typeof themes>("christmas");
-  const [isMintModalOpen, setIsMintModalOpen] = useState(false);
+  // Removed modal-based mint flow
+  const [isLoadingMint, setIsLoadingMint] = useState(false);
+  const [mintError, setMintError] = useState<string | null>(null);
+  const [ipfsHash, setIpfsHash] = useState<string | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const { address } = useAccount();
+  // Balance not needed for direct flow
+  const { writeContractAsync: mintWithETHWrite } = useWriteContract();
+  const { sendCalls } = useSendCalls();
   const theme = themes[currentTheme];
+
+  const DONUT_TOKEN_ADDRESS =
+    "0xae4a37d554c6d6f3e398546d8566b25052e0169c" as const;
+
+  const handleShareOnFarcaster = async () => {
+    if (!ipfsHash) return;
+    try {
+      const imageUrl = getIPFSUrl(ipfsHash);
+      const text = `Check out my Warplet data for 2025! 🍩\n\nLet's see yours too 👇`;
+      await sdk.actions.composeCast({
+        text,
+        embeds: [imageUrl, window.location.origin] as [string, string],
+      });
+      setShowShareModal(false);
+    } catch (e) {
+      console.error("Failed to share on Farcaster", e);
+    }
+  };
+
+  const mintWrappedWithETH = async () => {
+    if (!address) return;
+    try {
+      setIsLoadingMint(true);
+      setMintError(null);
+      const hash = await uploadToIPFS({
+        username: displayName,
+        totalProfitLoss: metrics.totalProfitLoss,
+        winRate: metrics.winRate,
+        netWorth: metrics.currentNetWorth,
+        timestamp: Date.now(),
+      });
+      setIpfsHash(hash);
+      const txHash = await mintWithETHWrite({
+        address: MintContract.address as `0x${string}`,
+        abi: MintContract.abi,
+        functionName: "mintWithETH",
+        args: [
+          displayName,
+          BigInt(Math.floor(metrics.totalProfitLoss * 100)),
+          BigInt(Math.floor(metrics.winRate * 100)),
+          BigInt(Math.floor(metrics.currentNetWorth * 100)),
+        ],
+        value: parseEther("0.01"),
+      });
+      if (txHash) {
+        setShowShareModal(true);
+      }
+    } catch (err: any) {
+      setMintError(err?.message || "Transaction failed");
+    } finally {
+      setIsLoadingMint(false);
+    }
+  };
+
+  const mintWrappedWithDonut = async () => {
+    if (!address) return;
+    try {
+      setIsLoadingMint(true);
+      setMintError(null);
+      const hash = await uploadToIPFS({
+        username: displayName,
+        totalProfitLoss: metrics.totalProfitLoss,
+        winRate: metrics.winRate,
+        netWorth: metrics.currentNetWorth,
+        timestamp: Date.now(),
+      });
+      setIpfsHash(hash);
+      const calls = [
+        {
+          to: DONUT_TOKEN_ADDRESS as `0x${string}`,
+          data: encodeFunctionData({
+            abi: [
+              {
+                type: "function",
+                name: "approve",
+                inputs: [
+                  { name: "spender", type: "address" },
+                  { name: "amount", type: "uint256" },
+                ],
+                outputs: [{ name: "", type: "bool" }],
+                stateMutability: "nonpayable",
+              },
+            ],
+            functionName: "approve",
+            args: [
+              MintContract.address as `0x${string}`,
+              BigInt(
+                "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+              ),
+            ],
+          }),
+        },
+        {
+          to: MintContract.address as `0x${string}`,
+          data: encodeFunctionData({
+            abi: MintContract.abi,
+            functionName: "mintWithERC20",
+            args: [
+              DONUT_TOKEN_ADDRESS as `0x${string}`,
+              displayName,
+              BigInt(Math.floor(metrics.totalProfitLoss * 100)),
+              BigInt(Math.floor(metrics.winRate * 100)),
+              BigInt(Math.floor(metrics.currentNetWorth * 100)),
+            ],
+          }),
+        },
+      ];
+      await sendCalls({ calls, account: address });
+      setShowShareModal(true);
+    } catch (err: any) {
+      setMintError(err?.message || "Transaction failed");
+    } finally {
+      setIsLoadingMint(false);
+    }
+  };
 
   const formatUSD = (amount: number) => {
     const sign = amount >= 0 ? "+" : "";
@@ -602,7 +729,7 @@ export default function WarpletWrapped({
       >
         <button
           className="mint-button"
-          onClick={() => setIsMintModalOpen(true)}
+          onClick={mintWrappedWithETH}
           style={{
             padding: "1rem 2rem",
             background: theme.accentColor,
@@ -611,22 +738,17 @@ export default function WarpletWrapped({
             borderRadius: "1.5rem",
             fontSize: "1rem",
             fontWeight: "bold",
-            cursor: "pointer",
+            cursor: isLoadingMint || !address ? "not-allowed" : "pointer",
+            opacity: isLoadingMint || !address ? 0.6 : 1,
             transition: "all 0.2s ease",
             boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
           }}
-          onMouseEnter={(e) => {
-            (e.target as HTMLElement).style.transform = "scale(1.05)";
-          }}
-          onMouseLeave={(e) => {
-            (e.target as HTMLElement).style.transform = "scale(1)";
-          }}
         >
-          💰 Mint with ETH
+          {isLoadingMint ? "Minting..." : "💰 Mint with ETH"}
         </button>
         <button
           className="mint-button"
-          onClick={() => setIsMintModalOpen(true)}
+          onClick={mintWrappedWithDonut}
           style={{
             padding: "1rem 2rem",
             background: theme.accentColor,
@@ -635,29 +757,163 @@ export default function WarpletWrapped({
             borderRadius: "1.5rem",
             fontSize: "1rem",
             fontWeight: "bold",
-            cursor: "pointer",
+            cursor: isLoadingMint || !address ? "not-allowed" : "pointer",
+            opacity: isLoadingMint || !address ? 0.6 : 1,
             transition: "all 0.2s ease",
             boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
           }}
-          onMouseEnter={(e) => {
-            (e.target as HTMLElement).style.transform = "scale(1.05)";
-          }}
-          onMouseLeave={(e) => {
-            (e.target as HTMLElement).style.transform = "scale(1)";
-          }}
         >
-          🍩 Mint with $Donut
+          {isLoadingMint ? "Minting..." : "🍩 Mint with $Donut"}
         </button>
       </div>
 
-      {/* Mint Modal */}
-      <MintModal
-        isOpen={isMintModalOpen}
-        onClose={() => setIsMintModalOpen(false)}
-        displayName={displayName}
-        metrics={metrics}
-        theme={theme}
-      />
+      {mintError && (
+        <div
+          style={{
+            marginTop: "1rem",
+            background: "#fee2e2",
+            color: "#991b1b",
+            padding: "0.75rem 1rem",
+            borderRadius: "1rem",
+            fontSize: "0.9rem",
+          }}
+        >
+          {mintError}
+        </div>
+      )}
+
+      {showShareModal && ipfsHash && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1001,
+            backdropFilter: "blur(4px)",
+          }}
+          onClick={() => setShowShareModal(false)}
+        >
+          <div
+            style={{
+              background: theme.cardBg,
+              borderRadius: "1.5rem",
+              padding: "2rem",
+              maxWidth: "500px",
+              width: "90%",
+              color: theme.textColor,
+              border: theme.cardBorder,
+              boxShadow: theme.cardShadow,
+              position: "relative",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowShareModal(false)}
+              style={{
+                position: "absolute",
+                top: "1rem",
+                right: "1rem",
+                background: "none",
+                border: "none",
+                fontSize: "1.5rem",
+                cursor: "pointer",
+                color: theme.textColor,
+              }}
+            >
+              ✕
+            </button>
+
+            <h2
+              style={{
+                marginBottom: "1.5rem",
+                color: theme.accentColor,
+                fontSize: "1.5rem",
+              }}
+            >
+              Share Your Wrapped
+            </h2>
+
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+            >
+              <div
+                style={{
+                  background: theme.secondaryBg,
+                  padding: "1rem",
+                  borderRadius: "1rem",
+                  textAlign: "center",
+                }}
+              >
+                <p
+                  style={{
+                    margin: "0 0 0.5rem 0",
+                    fontSize: "0.9rem",
+                    opacity: 0.8,
+                  }}
+                >
+                  Share this on Farcaster:
+                </p>
+                <div
+                  style={{
+                    background: "rgba(0,0,0,0.2)",
+                    padding: "1rem",
+                    borderRadius: "0.75rem",
+                    fontSize: "0.85rem",
+                    lineHeight: "1.5",
+                    margin: "0.5rem 0",
+                  }}
+                >
+                  Check out my Warplet data for 2025! 🍩
+                  <br />
+                  Let&apos;s see yours too 👇
+                </div>
+              </div>
+
+              <button
+                onClick={handleShareOnFarcaster}
+                style={{
+                  padding: "1rem",
+                  borderRadius: "1rem",
+                  background: theme.accentColor,
+                  color: theme.cardBg,
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "1rem",
+                  fontWeight: "bold",
+                }}
+              >
+                📲 Share on Farcaster
+              </button>
+
+              <button
+                onClick={() => {
+                  const shareText = `Check out my Warplet data for 2025! 🍩\n${getIPFSUrl(ipfsHash!)}\n${window.location.origin}`;
+                  navigator.clipboard.writeText(shareText);
+                  alert("Share text copied to clipboard!");
+                }}
+                style={{
+                  padding: "0.75rem",
+                  borderRadius: "1rem",
+                  background: "transparent",
+                  color: theme.accentColor,
+                  border: `1px solid ${theme.accentColor}`,
+                  cursor: "pointer",
+                  fontSize: "0.9rem",
+                  fontWeight: "bold",
+                }}
+              >
+                📋 Copy Share Text
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
