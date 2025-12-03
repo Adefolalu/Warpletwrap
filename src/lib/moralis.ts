@@ -125,8 +125,10 @@ export async function getNetWorth(
   chains = ["base"]
 ): Promise<MoralisNetWorthResponse> {
   const chainParams = chains.map((c, i) => `chains%5B${i}%5D=${c}`).join("&");
+  const queryParams =
+    "exclude_spam=true&exclude_unverified_contracts=true&max_token_inactivity=1&min_pair_side_liquidity_usd=1000";
   const response = await fetch(
-    `${MORALIS_BASE_URL}/wallets/${address}/net-worth?${chainParams}`,
+    `${MORALIS_BASE_URL}/wallets/${address}/net-worth?${chainParams}&${queryParams}`,
     {
       headers: {
         accept: "application/json",
